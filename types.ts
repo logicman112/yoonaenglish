@@ -10,6 +10,7 @@ export enum AppView {
 
 export interface QuizQuestion {
   sentence: string;
+  translation: string;
   options: string[];
   answerIndex: number;
   explanation: string;
