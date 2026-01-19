@@ -3,12 +3,15 @@ import { GoogleGenAI, Type, Chat } from "@google/genai";
 import { TranscriptEntry, FeedbackData, QuizQuestion } from '../types';
 
 class GeminiService {
-  private ai: GoogleGenAI;
   private modelName = 'gemini-3-flash-preview';
 
-  constructor() {
-    // process.env.API_KEY를 통해 시스템에 설정된 윤아님의 키를 안전하게 가져옵니다.
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // API 인스턴스를 필요할 때마다 생성하여 환경 변수 주입 시점 문제를 해결합니다.
+  private get ai() {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      console.warn("API_KEY가 아직 설정되지 않았습니다. 환경 변수를 확인해주세요.");
+    }
+    return new GoogleGenAI({ apiKey: apiKey || "" });
   }
 
   // 채팅 세션 생성
@@ -38,7 +41,6 @@ class GeminiService {
       "Scientific discovery", "Travel blog", "Political debate", "Technology review", "Family dinner", "Space exploration"
     ];
     
-    // 무작위 카테고리와 상황의 조합으로 무한한 문제 생성 보장
     const randomCategory = categories[Math.floor(Math.random() * categories.length)];
     const randomContext = contexts[Math.floor(Math.random() * contexts.length)];
     
@@ -57,7 +59,7 @@ class GeminiService {
       6. Crucial: Avoid simple or repetitive sentences. Make it diverse and challenging every time.`,
       config: {
         responseMimeType: "application/json",
-        seed: Math.floor(Math.random() * 9999999), // 매 요청마다 무작위 시드를 부여해 동일 결과 방지
+        seed: Math.floor(Math.random() * 9999999),
         responseSchema: {
           type: Type.OBJECT,
           properties: {
