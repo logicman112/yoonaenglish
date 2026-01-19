@@ -3,7 +3,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { QuizQuestion } from '../types';
 import { geminiService } from '../services/geminiService';
 
-const GrammarQuiz: React.FC = () => {
+interface GrammarQuizProps {
+  onApiError?: (error: any) => void;
+}
+
+const GrammarQuiz: React.FC<GrammarQuizProps> = ({ onApiError }) => {
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -20,12 +24,13 @@ const GrammarQuiz: React.FC = () => {
       const data = await geminiService.generateQuizQuestion();
       setQuestion(data);
       setQuestionCount(p => p + 1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("퀴즈 생성 실패:", error);
+      onApiError?.(error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onApiError]);
 
   useEffect(() => {
     generateQuestion();
@@ -62,16 +67,14 @@ const GrammarQuiz: React.FC = () => {
         </div>
       </div>
 
-      <div className="glass-card rounded-[3.5rem] shadow-2xl shadow-indigo-500/5 overflow-hidden flex flex-col min-h-[550px]">
+      <div className="glass-card rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col min-h-[550px]">
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center p-20">
             <div className="relative">
               <div className="w-24 h-24 border-8 border-indigo-50 border-t-indigo-600 rounded-full animate-spin"></div>
               <div className="absolute inset-0 flex items-center justify-center text-3xl">🧩</div>
             </div>
-            <p className="mt-10 text-xl font-bold text-slate-800 animate-pulse text-center">
-              윤A를 위한 새로운 문제를<br/>가져오고 있어요...
-            </p>
+            <p className="mt-10 text-xl font-bold text-slate-800 animate-pulse text-center">윤A를 위한 문제를 가져오고 있어요...</p>
           </div>
         ) : question ? (
           <div className="p-10 md:p-16 flex-1 flex flex-col">
@@ -92,11 +95,8 @@ const GrammarQuiz: React.FC = () => {
                   </React.Fragment>
                 ))}
               </h3>
-              {/* 한글 번역 표시 영역 */}
               <div className="mt-6 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 inline-block animate-in fade-in duration-700">
-                <p className="text-lg text-slate-500 font-bold italic">
-                  ({question.translation})
-                </p>
+                <p className="text-lg text-slate-500 font-bold italic">({question.translation})</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
@@ -111,9 +111,7 @@ const GrammarQuiz: React.FC = () => {
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg ${
                     showFeedback && i === question.answerIndex ? 'bg-emerald-500 text-white' : showFeedback && i === selectedIdx ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400'
-                  }`}>
-                    {String.fromCharCode(65 + i)}
-                  </div>
+                  }`}>{String.fromCharCode(65 + i)}</div>
                   <span className="text-xl font-bold">{opt}</span>
                 </button>
               ))}
@@ -127,9 +125,7 @@ const GrammarQuiz: React.FC = () => {
                     <p className="text-slate-600 font-medium italic">{question.explanation}</p>
                   </div>
                 </div>
-                <button onClick={generateQuestion} className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black text-xl shadow-2xl transition-all">
-                  다음 문제 도전하기 →
-                </button>
+                <button onClick={generateQuestion} className="w-full py-6 bg-slate-900 text-white rounded-3xl font-black text-xl shadow-2xl transition-all">다음 문제 도전하기 →</button>
               </div>
             )}
           </div>

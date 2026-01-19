@@ -5,18 +5,17 @@ import { TranscriptEntry, FeedbackData, QuizQuestion } from '../types';
 class GeminiService {
   private modelName = 'gemini-3-flash-preview';
 
-  // API 인스턴스를 생성할 때 키가 있는지 엄격히 체크합니다.
-  private get ai() {
+  // 인스턴스를 미리 만들지 않고 호출 시점에 생성하여 환경 변수 누락 문제를 방지합니다.
+  private getAIInstance() {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) {
+    if (!apiKey || apiKey === "undefined") {
       throw new Error("API_KEY_MISSING");
     }
     return new GoogleGenAI({ apiKey });
   }
 
-  // 채팅 세션 생성
   createChatSession(systemInstruction: string): Chat {
-    return this.ai.chats.create({
+    return this.getAIInstance().chats.create({
       model: this.modelName,
       config: {
         systemInstruction,
@@ -24,7 +23,6 @@ class GeminiService {
     });
   }
 
-  // 퀴즈 생성
   async generateQuizQuestion(): Promise<QuizQuestion> {
     const categories = [
       "Conditional Sentences", "Subjunctive Mood", "Passive Voice", "Relative Clauses", 
@@ -33,9 +31,9 @@ class GeminiService {
     
     const randomCategory = categories[Math.floor(Math.random() * categories.length)];
     
-    const response = await this.ai.models.generateContent({
+    const response = await this.getAIInstance().models.generateContent({
       model: this.modelName,
-      contents: `Generate a grammar quiz. Category: ${randomCategory}. Context: Daily Life. Provide Korean translation and explanation.`,
+      contents: `Generate a professional 4-option English grammar quiz. Category: ${randomCategory}. Context: Daily Life. Provide Korean translation and explanation.`,
       config: {
         responseMimeType: "application/json",
         seed: Math.floor(Math.random() * 999999),
@@ -56,12 +54,11 @@ class GeminiService {
     return JSON.parse(response.text || '{}') as QuizQuestion;
   }
 
-  // 피드백 생성
   async generateFeedback(transcripts: TranscriptEntry[]): Promise<FeedbackData> {
     const conversationText = transcripts.map(t => `${t.role}: ${t.text}`).join('\n');
-    const response = await this.ai.models.generateContent({
+    const response = await this.getAIInstance().models.generateContent({
       model: this.modelName,
-      contents: `Analyze conversation and provide feedback in Korean JSON: ${conversationText}`,
+      contents: `Analyze English conversation and provide feedback in Korean JSON: ${conversationText}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
