@@ -7,7 +7,7 @@ class GeminiService {
   private modelName = 'gemini-3-flash-preview';
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: 'AIzaSyCEoEEay1pOj5UDyfLjYgJZs2-6Z2UmYMs' });
+   this.ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   }
 
   // 채팅 세션 생성
